@@ -3,6 +3,10 @@
 
 const Hapi = require('@hapi/hapi');
 
+require('dotenv').config();
+
+import { rpc } from './lib/jsonrpc';
+
 const init = async () => {
 
     const server = Hapi.server({
@@ -18,11 +22,35 @@ const init = async () => {
 
       config: {
 
-        handler: (req, h) => {
+        handler: async (req, h) => {
 
-          console.log(req);
+					var result;
 
-          return {}
+          let payload = JSON.parse(Object.keys(req.payload)[0]);
+
+          console.log(payload);
+
+          var params = payload.params;
+
+          if (payload.method === 'getbalance') {
+
+            params = [];
+
+          }
+
+          if (payload.method === 'sendfrom') {
+
+            payload.method = 'sendtoaddress';
+
+            params = [payload.params[1], payload.params[2]];
+
+          }
+	    
+          result = await rpc.call(payload.method, params, payload.id);
+
+          console.log('result', result);
+
+          return result;
 
         }
 
